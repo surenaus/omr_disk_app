@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎵 Antique Punched Disk OMR & Interactive Synthesizer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0d1117;
+            --surface: #161b22;
+            --surface-border: #30363d;
+            --primary: #58a6ff;
+            --primary-hover: #79c0ff;
+            --accent: #2ea043;
+            --accent-hover: #3fb950;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+            --danger: #f85149;
+            --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .container { max-width: 1200px; margin: 0 auto; }
+
+        header { text-align: center; margin-bottom: 2rem; }
+
+        header h1 {
+            font-size: 2.3rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #58a6ff, #bc8cff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p { color: var(--text-muted); font-size: 1.05rem; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 960px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--surface-border);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            box-shadow: var(--card-shadow);
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--surface-border);
+            padding-bottom: 0.75rem;
+        }
+
+        /* Upload Dropzone */
+        .dropzone {
+            border: 2px dashed var(--surface-border);
+            border-radius: var(--radius);
+            padding: 2rem 1.25rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.02);
+            margin-bottom: 1.25rem;
+        }
+
+        .dropzone:hover, .dropzone.dragover {
+            border-color: var(--primary);
+            background: rgba(88, 166, 255, 0.05);
+        }
+
+        .dropzone-icon { font-size: 2.8rem; margin-bottom: 0.5rem; display: block; }
+        .dropzone p { color: var(--text-muted); font-size: 0.9rem; }
+        .dropzone input[type="file"] { display: none; }
+        .file-chosen-preview { margin-top: 0.75rem; font-size: 0.85rem; color: var(--primary); font-weight: 500; }
+
+        /* Form Controls */
+        .form-group { margin-bottom: 0.85rem; }
+        .form-group label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.35rem; }
+        .form-control {
+            width: 100%;
+            padding: 0.55rem 0.8rem;
+            background: var(--bg);
+            border: 1px solid var(--surface-border);
+            border-radius: 8px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+        .form-control:focus { outline: none; border-color: var(--primary); }
+
+        .form-row { display: flex; gap: 0.75rem; }
+        .form-row .form-group { flex: 1; }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+            cursor: pointer;
+            user-select: none;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            width: 100%;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .btn-primary { background: var(--accent); color: #fff; margin-top: 0.75rem; }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-secondary {
+            background: rgba(88, 166, 255, 0.15);
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            margin-top: 0.5rem;
+        }
+        .btn-secondary:hover { background: rgba(88, 166, 255, 0.25); }
+
+        /* Interactive Canvas Editor Toolbar */
+        .editor-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem;
+            background: var(--bg);
+            border: 1px solid var(--surface-border);
+            border-radius: 8px;
+        }
+
+        .tool-btn {
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            border: 1px solid var(--surface-border);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+            font-size: 0.82rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            transition: all 0.15s ease;
+        }
+
+        .tool-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .tool-btn.active {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #0d1117;
+            font-weight: 600;
+        }
+
+        .tool-btn.tool-center.active { background: #00e5ff; border-color: #00e5ff; color: #000; }
+        .tool-btn.tool-rim.active { background: #ff5252; border-color: #ff5252; color: #fff; }
+        .tool-btn.tool-hole.active { background: #69f0ae; border-color: #69f0ae; color: #000; }
+        .tool-btn.tool-delete.active { background: #ff5252; border-color: #ff5252; color: #fff; }
+
+        .canvas-container {
+            position: relative;
+            width: 100%;
+            min-width: 0;
+            height: 520px;
+            background: #090d13;
+            border: 1px solid var(--surface-border);
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+
+        .canvas-container:fullscreen,
+        .canvas-container.canvas-fullscreen {
+            width: 100vw;
+            height: 100vh;
+            border: 0;
+            border-radius: 0;
+            z-index: 1000;
+        }
+
+        .canvas-container:fullscreen canvas,
+        .canvas-container.canvas-fullscreen canvas {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        canvas {
+            display: block;
+            max-width: 100%;
+            max-height: 100%;
+            touch-action: none;
+        }
+
+        .canvas-overlay-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 0.35rem;
+            background: rgba(13, 17, 23, 0.85);
+            backdrop-filter: blur(4px);
+            border: 1px solid var(--surface-border);
+            padding: 0.35rem;
+            border-radius: 6px;
+            z-index: 10;
+        }
+
+        .ctrl-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--surface-border);
+            color: var(--text-main);
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+        .ctrl-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .canvas-hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 0.4rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        /* Stats & Audio */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.6rem;
+            margin: 1rem 0;
+        }
+
+        .stat-badge {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--surface-border);
+            border-radius: 8px;
+            padding: 0.5rem 0.6rem;
+            text-align: center;
+        }
+
+        .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
+        .stat-value { font-size: 1.1rem; font-weight: 700; color: var(--primary); font-family: 'JetBrains Mono', monospace; }
+
+        .audio-player-box {
+            background: var(--bg);
+            border: 1px solid var(--surface-border);
+            border-radius: 8px;
+            padding: 0.85rem;
+            margin-bottom: 1rem;
+        }
+
+        audio { width: 100%; margin-top: 0.4rem; height: 36px; }
+
+        .downloads-box { display: flex; gap: 0.5rem; }
+        .btn-download {
+            flex: 1;
+            padding: 0.5rem;
+            font-size: 0.85rem;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--surface-border);
+            color: var(--text-main);
+            border-radius: 6px;
+            text-align: center;
+            text-decoration: none;
+        }
+        .btn-download:hover { background: rgba(88, 166, 255, 0.15); border-color: var(--primary); color: var(--primary); }
+
+        /* History Table */
+        .history-card { margin-top: 2rem; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th { text-align: left; padding: 0.65rem 0.85rem; color: var(--text-muted); border-bottom: 1px solid var(--surface-border); font-size: 0.75rem; text-transform: uppercase; }
+        td { padding: 0.75rem 0.85rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); vertical-align: middle; }
+
+        .history-actions { display: flex; gap: 0.4rem; }
+        .btn-sm {
+            padding: 0.35rem 0.65rem;
+            font-size: 0.78rem;
+            border-radius: 6px;
+            text-decoration: none;
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-main);
+            border: 1px solid var(--surface-border);
+            cursor: pointer;
+        }
+        .btn-sm:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-danger-sm { color: var(--danger); }
+        .btn-danger-sm:hover { border-color: var(--danger); background: rgba(248, 81, 73, 0.1); }
+
+        .spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🎵 Antique Punched Disk OMR & Interactive Synthesizer</h1>
+        <p>Human-in-the-Loop: Auto-detect, interactively adjust holes & center on Canvas, and synthesize melodies</p>
+    </header>
+
+    <div class="grid">
+        <!-- Settings & Upload Column -->
+        <div class="card">
+            <h2>⚙️ Upload & Parameters</h2>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="dropzone" id="dropzone">
+                    <span class="dropzone-icon">💿</span>
+                    <strong>Drag & Drop Disk Photo</strong>
+                    <p>or click to browse (JPG, PNG)</p>
+                    <input type="file" id="diskImage" name="disk_image" accept="image/*" required>
+                    <div id="fileChosen" class="file-chosen-preview"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="diskTitle">Disc Title</label>
+                    <input type="text" id="diskTitle" name="title" class="form-control" value="Antique Disk">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="diskRadius">Radius (cm)</label>
+                        <input type="number" step="0.1" id="diskRadius" name="disk_radius_cm" class="form-control" value="19.0">
+                    </div>
+                    <div class="form-group">
+                        <label for="tempoBpm">Tempo (BPM)</label>
+                        <input type="number" step="0.1" id="tempoBpm" name="tempo_bpm" class="form-control" value="5.3">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="instrument">Instrument</label>
+                        <select id="instrument" name="instrument_program" class="form-control">
+                            <option value="11" selected>Music Box (Chime Comb)</option>
+                            <option value="10">Glockenspiel</option>
+                            <option value="14">Tubular Bells</option>
+                            <option value="0">Acoustic Piano</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="noteDuration">Gate (s)</label>
+                        <input type="number" step="0.1" id="noteDuration" name="note_duration" class="form-control" value="0.5">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="checkbox-group">
+                        <input type="checkbox" id="reverseDir" name="reverse_direction" value="true" checked>
+                        <span>Reverse (Clockwise Rotation)</span>
+                    </label>
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn btn-primary">
+                    <span class="spinner" id="btnSpinner"></span>
+                    <span id="btnText">✨ 1. Auto-Detect Holes</span>
+                </button>
+            </form>
+
+            <button type="button" id="recomputeBtn" class="btn btn-secondary" style="display:none;" onclick="recomputeMelody()">
+                <span class="spinner" id="recomputeSpinner"></span>
+                <span>⚡ 2. Re-Synthesize with Current Edits & Instrument</span>
+            </button>
+            <button type="button" id="saveEditsBtn" class="btn btn-secondary" style="display:none;" onclick="saveEditorChanges()">
+                <span class="spinner" id="saveEditsSpinner"></span>
+                <span>💾 Save Changes to Database</span>
+            </button>
+        </div>
+
+        <!-- Interactive Canvas Editor & Audio Result Column -->
+        <div class="card">
+            <h2>
+                <span>🎨 Interactive Canvas Editor</span>
+                <span id="activeDiskTitle" style="font-size: 0.85rem; color: var(--text-muted); font-weight: normal;"></span>
+            </h2>
+
+            <!-- Tool Bar -->
+            <div class="editor-toolbar" id="editorToolbar">
+                <button type="button" class="tool-btn tool-pan" onclick="setTool('pan')">✋ Pan / Move</button>
+                <button type="button" class="tool-btn tool-center active" onclick="setTool('center')">🎯 Set Center</button>
+                <button type="button" class="tool-btn tool-start" onclick="setTool('start')">📍 Set Start Line</button>
+                <button type="button" class="tool-btn tool-rim" onclick="setTool('rim')">⭕ Rim / Edge Dots</button>
+                <button type="button" class="tool-btn tool-hole" onclick="setTool('hole')">🟢 Add Note Holes</button>
+                <button type="button" class="tool-btn tool-delete" onclick="setTool('delete')">❌ Erase / Delete</button>
+                <button type="button" class="tool-btn" onclick="clearHoles()">🧹 Clear All Holes</button>
+            </div>
+
+            <!-- Canvas Viewport with Zoom / Pan Controls -->
+            <div class="canvas-container" id="canvasContainer">
+                <div class="canvas-overlay-controls">
+                    <button type="button" class="ctrl-btn" title="Fullscreen editor" onclick="toggleCanvasFullscreen()">⛶</button>
+                    <button type="button" class="ctrl-btn" title="Zoom In" onclick="zoomIn()">+</button>
+                    <button type="button" class="ctrl-btn" title="Zoom Out" onclick="zoomOut()">−</button>
+                    <button type="button" class="ctrl-btn" title="Fit to View" onclick="resetZoom()">⟲</button>
+                </div>
+                <canvas id="diskCanvas"></canvas>
+            </div>
+            <div class="canvas-hint">
+                <span>🖱️ Mouse Wheel: Zoom | Drag (Middle click or Pan tool): Scroll | Left Click: Edit | Right Click: Delete</span>
+                <span id="canvasStats">0 holes</span>
+            </div>
+
+            <!-- Stats Badge Grid -->
+            <div class="stats-grid">
+                <div class="stat-badge">
+                    <div class="stat-label">Melody Holes</div>
+                    <div class="stat-value" id="statMelody">0</div>
+                </div>
+                <div class="stat-badge">
+                    <div class="stat-label">Rim Points</div>
+                    <div class="stat-value" id="statRim">0</div>
+                </div>
+                <div class="stat-badge">
+                    <div class="stat-label">Active Tracks</div>
+                    <div class="stat-value" id="statTracks">0/78</div>
+                </div>
+                <div class="stat-badge">
+                    <div class="stat-label">Total Notes</div>
+                    <div class="stat-value" id="statNotes">0</div>
+                </div>
+            </div>
+
+            <!-- Audio Player Box -->
+            <div class="audio-player-box" id="audioBox" style="display:none;">
+                <strong style="font-size: 0.9rem;">🎧 Synthesized Melody Audio:</strong>
+                <audio id="audioPlayer" controls>
+                    Your browser does not support audio element.
+                </audio>
+            </div>
+
+            <!-- Download Links -->
+            <div class="downloads-box" id="downloadsBox" style="display:none;">
+                <a href="#" id="downloadMidi" class="btn-download" download>📥 Download MIDI</a>
+                <a href="#" id="downloadWav" class="btn-download" download>📥 Download WAV</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Converted Disks Database Table -->
+    <div class="card history-card">
+        <h2>📚 Converted Disks Database</h2>
+        <div style="overflow-x: auto;">
+            <table id="historyTable">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Holes</th>
+                        <th>Notes</th>
+                        <th>Created</th>
+                        <th>Modified</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody">
+                    {% if disks and disks|length > 0 %}
+                        {% for disk in disks %}
+                        <tr id="row-{{ disk.id }}">
+                            <td><strong>{{ disk.title }}</strong><br><small style="color: var(--text-muted)">{{ disk.original_filename }}</small></td>
+                            <td>{{ disk.stats.melody_holes_detected }}</td>
+                            <td>{{ disk.stats.total_playable_notes }}</td>
+                            <td>
+                                <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">
+                                    {{ disk.created_at[:10] }}<br>
+                                    <small style="color: var(--text-muted)">{{ disk.created_at[11:16] if disk.created_at|length >= 16 else '' }}</small>
+                                </span>
+                            </td>
+                            <td>
+                                {% set modified_at = disk.updated_at|default(disk.created_at) %}
+                                <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">
+                                    {{ modified_at[:10] }}<br>
+                                    <small style="color: var(--text-muted)">{{ modified_at[11:16] if modified_at|length >= 16 else '' }}</small>
+                                </span>
+                            </td>
+                            <td>
+                                <div class="history-actions">
+                                    <button class="btn-sm" onclick="loadDiskData('{{ disk.id }}')">🎨 Edit & Play</button>
+                                    <a href="{{ disk.files.midi }}" class="btn-sm" download>MID</a>
+                                    <a href="{{ disk.files.wav }}" class="btn-sm" download>WAV</a>
+                                    <button class="btn-sm btn-danger-sm" onclick="deleteDisk('{{ disk.id }}')">✕</button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr id="noDataRow">
+                            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">No disks processed yet.</td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // State Variables
+    let currentDiskId = null;
+    let currentImage = new Image();
+    let imageLoaded = false;
+    let currentTool = 'center'; // 'pan', 'center', 'start', 'rim', 'hole', 'delete'
+
+    let diskCenter = [500, 500];
+    let startAngle = 0.0;
+    let melodyDots = []; // [[x, y], ...]
+    let outerDots = [];  // [[x, y], ...]
+
+    // Pan & Zoom Viewport State
+    let zoomLevel = 1.0;
+    let panOffset = { x: 0, y: 0 };
+    let isPanning = false;
+    let panStart = { x: 0, y: 0 };
+    let isDragged = false;
+
+    const canvas = document.getElementById('diskCanvas');
+    const ctx = canvas.getContext('2d');
+    const container = document.getElementById('canvasContainer');
+
+    // Resize canvas to match container viewport
+    function resizeCanvas() {
+        const rect = container.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        redrawCanvas();
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    // Zoom Functions
+    function zoomIn() {
+        setZoom(zoomLevel * 1.25, canvas.width / 2, canvas.height / 2);
+    }
+    function zoomOut() {
+        setZoom(zoomLevel / 1.25, canvas.width / 2, canvas.height / 2);
+    }
+    function resetZoom() {
+        if (!imageLoaded) return;
+        const scaleX = canvas.width / currentImage.naturalWidth;
+        const scaleY = canvas.height / currentImage.naturalHeight;
+        zoomLevel = Math.min(scaleX, scaleY) * 0.95;
+        panOffset.x = (canvas.width - currentImage.naturalWidth * zoomLevel) / 2;
+        panOffset.y = (canvas.height - currentImage.naturalHeight * zoomLevel) / 2;
+        redrawCanvas();
+    }
+
+    async function toggleCanvasFullscreen() {
+        const container = document.getElementById('canvasContainer');
+        try {
+            if (!document.fullscreenElement) {
+                if (container.requestFullscreen) {
+                    await container.requestFullscreen();
+                } else {
+                    container.classList.add('canvas-fullscreen');
+                }
+            } else if (document.exitFullscreen) {
+                await document.exitFullscreen();
+            }
+        } catch (error) {
+            container.classList.toggle('canvas-fullscreen');
+        }
+        requestAnimationFrame(() => {
+            resizeCanvas();
+            if (imageLoaded) resetZoom();
+        });
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+        const container = document.getElementById('canvasContainer');
+        if (!document.fullscreenElement) {
+            container.classList.remove('canvas-fullscreen');
+        }
+        requestAnimationFrame(() => {
+            resizeCanvas();
+            if (imageLoaded) resetZoom();
+        });
+    });
+
+    function setZoom(newZoom, pivotX, pivotY) {
+        newZoom = Math.max(0.05, Math.min(newZoom, 15.0));
+        const imgX = (pivotX - panOffset.x) / zoomLevel;
+        const imgY = (pivotY - panOffset.y) / zoomLevel;
+        zoomLevel = newZoom;
+        panOffset.x = pivotX - imgX * zoomLevel;
+        panOffset.y = pivotY - imgY * zoomLevel;
+        redrawCanvas();
+    }
+
+    // Mouse Wheel Zoom (centered at mouse cursor)
+    container.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        if (!imageLoaded) return;
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        const factor = e.deltaY < 0 ? 1.15 : 0.85;
+        setZoom(zoomLevel * factor, mouseX, mouseY);
+    }, { passive: false });
+
+    // Tool Selection
+    function setTool(tool) {
+        currentTool = tool;
+        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+        const activeBtn = document.querySelector(`.tool-${tool}`);
+        if (activeBtn) activeBtn.classList.add('active');
+        canvas.style.cursor = tool === 'pan' ? 'grab' : 'crosshair';
+    }
+
+    function clearHoles() {
+        if (confirm('Clear all melody holes on canvas?')) {
+            melodyDots = [];
+            redrawCanvas();
+            updateStatsUI();
+        }
+    }
+
+    // Coordinate conversion: Screen (mouse) <-> Image Pixel Coordinates
+    function screenToImagePos(screenX, screenY) {
+        return [
+            (screenX - panOffset.x) / zoomLevel,
+            (screenY - panOffset.y) / zoomLevel
+        ];
+    }
+
+    function imageToScreenPos(imgX, imgY) {
+        return [
+            imgX * zoomLevel + panOffset.x,
+            imgY * zoomLevel + panOffset.y
+        ];
+    }
+
+    // Canvas Redraw with Pan & Zoom Transform
+    function redrawCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        if (!imageLoaded) {
+            ctx.fillStyle = '#090d13';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#666';
+            ctx.font = '14px Outfit';
+            ctx.textAlign = 'center';
+            ctx.fillText('Upload a disk photo to start editing on canvas', canvas.width/2, canvas.height/2);
+            return;
+        }
+
+        ctx.save();
+        ctx.translate(panOffset.x, panOffset.y);
+        ctx.scale(zoomLevel, zoomLevel);
+
+        // Draw background image
+        ctx.drawImage(currentImage, 0, 0);
+
+        // Marker sizes scale dynamically with zoom so they remain clickable & crisp
+        const pointRadius = Math.max(2.5, 4.5 / Math.sqrt(zoomLevel));
+        const centerRingRadius = Math.max(8.0, 14.0 / Math.sqrt(zoomLevel));
+
+        // Draw Outer Rim / Drive Teeth Dots (Red)
+        ctx.fillStyle = '#ff5252';
+        for (let i = 0; i < outerDots.length; i++) {
+            const [x, y] = outerDots[i];
+            ctx.beginPath();
+            ctx.arc(x, y, pointRadius * 1.2, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        // Draw Melody Holes (Bright Green)
+        ctx.fillStyle = '#69f0ae';
+        for (let i = 0; i < melodyDots.length; i++) {
+            const [x, y] = melodyDots[i];
+            ctx.beginPath();
+            ctx.arc(x, y, pointRadius, 0, 2 * Math.PI);
+            ctx.fill();
+        }
+
+        // Draw Center (Cyan Circle & Crosshair)
+        if (diskCenter) {
+            const [cx, cy] = diskCenter;
+            const lineLength = Math.max(currentImage.naturalWidth, currentImage.naturalHeight);
+            ctx.strokeStyle = '#ffd740';
+            ctx.lineWidth = 2.0 / zoomLevel;
+            ctx.beginPath();
+            ctx.moveTo(cx, cy);
+            ctx.lineTo(cx + Math.cos(startAngle) * lineLength, cy + Math.sin(startAngle) * lineLength);
+            ctx.stroke();
+
+            ctx.strokeStyle = '#00e5ff';
+            ctx.lineWidth = 2.0 / zoomLevel;
+            ctx.beginPath();
+            ctx.arc(cx, cy, centerRingRadius, 0, 2 * Math.PI);
+            ctx.stroke();
+
+            ctx.fillStyle = '#ff1744';
+            ctx.beginPath();
+            ctx.arc(cx, cy, pointRadius * 0.9, 0, 2 * Math.PI);
+            ctx.fill();
+
+            ctx.fillStyle = '#00e5ff';
+            ctx.font = `${Math.max(10, 13 / Math.sqrt(zoomLevel))}px JetBrains Mono`;
+            ctx.fillText('Center', cx + centerRingRadius + 4, cy + 4);
+        }
+
+        ctx.restore();
+        updateStatsUI();
+    }
+
+    function updateStatsUI() {
+        document.getElementById('statMelody').innerText = melodyDots.length;
+        document.getElementById('statRim').innerText = outerDots.length;
+        document.getElementById('canvasStats').innerText = `${melodyDots.length} holes, ${outerDots.length} rim points | Zoom: ${(zoomLevel*100).toFixed(0)}%`;
+    }
+
+    // Mouse Events for Pan, Drag & Point Editing
+    canvas.addEventListener('mousedown', (e) => {
+        if (!imageLoaded) return;
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        // Middle button, Spacebar, or Pan tool -> Start Pan Drag
+        if (e.button === 1 || currentTool === 'pan' || e.shiftKey) {
+            isPanning = true;
+            isDragged = false;
+            panStart.x = mouseX - panOffset.x;
+            panStart.y = mouseY - panOffset.y;
+            canvas.style.cursor = 'grabbing';
+            e.preventDefault();
+            return;
+        }
+
+        isDragged = false;
+        panStart.x = mouseX;
+        panStart.y = mouseY;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!imageLoaded) return;
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        if (isPanning) {
+            panOffset.x = mouseX - panStart.x;
+            panOffset.y = mouseY - panStart.y;
+            isDragged = true;
+            redrawCanvas();
+            return;
+        }
+
+        if (Math.hypot(mouseX - panStart.x, mouseY - panStart.y) > 5) {
+            isDragged = true;
+        }
+    });
+
+    window.addEventListener('mouseup', (e) => {
+        if (isPanning) {
+            isPanning = false;
+            canvas.style.cursor = currentTool === 'pan' ? 'grab' : 'crosshair';
+            return;
+        }
+    });
+
+    // Left Click for Add / Edit
+    canvas.addEventListener('click', (e) => {
+        if (!imageLoaded || isDragged || isPanning) return;
+        const rect = canvas.getBoundingClientRect();
+        const [imgX, imgY] = screenToImagePos(e.clientX - rect.left, e.clientY - rect.top);
+
+        if (imgX < 0 || imgY < 0 || imgX > currentImage.naturalWidth || imgY > currentImage.naturalHeight) {
+            return;
+        }
+
+        const clickThresholdPx = Math.max(12.0, 20.0 / Math.sqrt(zoomLevel));
+
+        if (currentTool === 'center') {
+            diskCenter = [Math.round(imgX), Math.round(imgY)];
+        } else if (currentTool === 'start') {
+            startAngle = Math.atan2(imgY - diskCenter[1], imgX - diskCenter[0]);
+            if (startAngle < 0) startAngle += 2 * Math.PI;
+        } else if (currentTool === 'rim') {
+            outerDots.push([Math.round(imgX), Math.round(imgY)]);
+        } else if (currentTool === 'hole') {
+            melodyDots.push([Math.round(imgX), Math.round(imgY)]);
+        } else if (currentTool === 'delete') {
+            removeNearestPoint(imgX, imgY, clickThresholdPx);
+        }
+        redrawCanvas();
+    });
+
+    // Right Click for Delete
+    canvas.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        if (!imageLoaded || isPanning) return;
+        const rect = canvas.getBoundingClientRect();
+        const [imgX, imgY] = screenToImagePos(e.clientX - rect.left, e.clientY - rect.top);
+        const clickThresholdPx = Math.max(14.0, 24.0 / Math.sqrt(zoomLevel));
+        removeNearestPoint(imgX, imgY, clickThresholdPx);
+        redrawCanvas();
+    });
+
+    function removeNearestPoint(x, y, radiusThreshold) {
+        let bestDist = radiusThreshold;
+        let bestIdx = -1;
+        let bestType = null;
+
+        for (let i = 0; i < melodyDots.length; i++) {
+            const d = Math.hypot(melodyDots[i][0] - x, melodyDots[i][1] - y);
+            if (d < bestDist) {
+                bestDist = d;
+                bestIdx = i;
+                bestType = 'hole';
+            }
+        }
+        for (let i = 0; i < outerDots.length; i++) {
+            const d = Math.hypot(outerDots[i][0] - x, outerDots[i][1] - y);
+            if (d < bestDist) {
+                bestDist = d;
+                bestIdx = i;
+                bestType = 'rim';
+            }
+        }
+
+        if (bestType === 'hole' && bestIdx >= 0) {
+            melodyDots.splice(bestIdx, 1);
+        }
+        if (bestType === 'rim' && bestIdx >= 0) {
+            outerDots.splice(bestIdx, 1);
+        }
+    }
+
+    // Upload & Auto-Detect
+    const dropzone = document.getElementById('dropzone');
+    const diskImageInput = document.getElementById('diskImage');
+    const fileChosen = document.getElementById('fileChosen');
+    const uploadForm = document.getElementById('uploadForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnSpinner = document.getElementById('btnSpinner');
+    const btnText = document.getElementById('btnText');
+
+    dropzone.addEventListener('click', () => diskImageInput.click());
+    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+        if (e.dataTransfer.files.length > 0) {
+            diskImageInput.files = e.dataTransfer.files;
+            updateFileLabel();
+        }
+    });
+    diskImageInput.addEventListener('change', updateFileLabel);
+
+    function updateFileLabel() {
+        if (diskImageInput.files.length > 0) {
+            fileChosen.innerText = `Selected: ${diskImageInput.files[0].name}`;
+        }
+    }
+
+    uploadForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!diskImageInput.files.length) {
+            alert('Please select a disk image.');
+            return;
+        }
+
+        const formData = new FormData(uploadForm);
+        submitBtn.disabled = true;
+        btnSpinner.style.display = 'inline-block';
+        btnText.innerText = 'Analyzing & Detecting...';
+
+        try {
+            const resp = await fetch('/api/process', { method: 'POST', body: formData });
+            const data = await resp.json();
+            if (data.error) {
+                alert('Processing Error: ' + data.error);
+            } else {
+                loadDiskIntoCanvas(data);
+            }
+        } catch (err) {
+            alert('Request Failed: ' + err.message);
+        } finally {
+            submitBtn.disabled = false;
+            btnSpinner.style.display = 'none';
+            btnText.innerText = '✨ 1. Auto-Detect Holes';
+        }
+    });
+
+    // Load Disk Record into Canvas & Audio Player
+    function loadDiskIntoCanvas(disk) {
+        currentDiskId = disk.id;
+        document.getElementById('activeDiskTitle').innerText = `ID: ${disk.id} - ${disk.title}`;
+        document.getElementById('diskTitle').value = disk.title || 'Antique Disk';
+        document.getElementById('recomputeBtn').style.display = 'inline-flex';
+        document.getElementById('saveEditsBtn').style.display = 'inline-flex';
+
+        if (disk.parameters && disk.parameters.instrument_program !== undefined) {
+            document.getElementById('instrument').value = String(disk.parameters.instrument_program);
+        }
+
+        if (disk.points) {
+            diskCenter = disk.points.center || [500, 500];
+            startAngle = Number(disk.points.start_angle || 0.0);
+            melodyDots = disk.points.melody_dots || [];
+            outerDots = disk.points.outer_dots || [];
+        }
+
+        // Update stats
+        document.getElementById('statMelody').innerText = disk.stats.melody_holes_detected;
+        document.getElementById('statRim').innerText = disk.stats.outer_teeth_detected;
+        document.getElementById('statTracks').innerText = `${disk.stats.active_tracks_count}/78`;
+        document.getElementById('statNotes').innerText = disk.stats.total_playable_notes;
+
+        // Load clean background image (without burned-in raster dots)
+        currentImage.onload = () => {
+            imageLoaded = true;
+            resizeCanvas();
+            resetZoom();
+        };
+        currentImage.src = disk.files.image || disk.files.preview;
+
+        // Audio Player
+        const audioPlayer = document.getElementById('audioPlayer');
+        audioPlayer.src = disk.files.wav;
+        document.getElementById('audioBox').style.display = 'block';
+
+        const dlMidi = document.getElementById('downloadMidi');
+        const dlWav = document.getElementById('downloadWav');
+        dlMidi.href = disk.files.midi;
+        dlWav.href = disk.files.wav;
+        document.getElementById('downloadsBox').style.display = 'flex';
+    }
+
+    async function loadDiskData(id) {
+        try {
+            const resp = await fetch(`/api/disk/${id}`);
+            const data = await resp.json();
+            if (!data.error) {
+                loadDiskIntoCanvas(data);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        } catch (e) {
+            alert('Failed to load: ' + e.message);
+        }
+    }
+
+    // Re-synthesize from Canvas Edits
+    async function recomputeMelody() {
+        if (!currentDiskId) return;
+
+        const recomputeBtn = document.getElementById('recomputeBtn');
+        const spinner = document.getElementById('recomputeSpinner');
+        recomputeBtn.disabled = true;
+        spinner.style.display = 'inline-block';
+
+        const payload = {
+            disk_id: currentDiskId,
+            center: diskCenter,
+            melody_dots: melodyDots,
+            outer_dots: outerDots,
+            start_angle: startAngle,
+            disk_radius_cm: parseFloat(document.getElementById('diskRadius').value || 19.0),
+            tempo_bpm: parseFloat(document.getElementById('tempoBpm').value || 5.3),
+            note_duration: parseFloat(document.getElementById('noteDuration').value || 0.5),
+            instrument_program: parseInt(document.getElementById('instrument').value || 11),
+            reverse_direction: document.getElementById('reverseDir').checked
+        };
+
+        try {
+            const resp = await fetch('/api/recompute', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (data.error) {
+                alert('Recompute Error: ' + data.error);
+            } else {
+                loadDiskIntoCanvas(data);
+                const audioPlayer = document.getElementById('audioPlayer');
+                audioPlayer.src = `${data.files.wav}?t=${Date.now()}`;
+                audioPlayer.play();
+            }
+        } catch (err) {
+            alert('Failed to recompute: ' + err.message);
+        } finally {
+            recomputeBtn.disabled = false;
+            spinner.style.display = 'none';
+        }
+    }
+
+    async function saveEditorChanges() {
+        if (!currentDiskId) return;
+
+        const button = document.getElementById('saveEditsBtn');
+        const spinner = document.getElementById('saveEditsSpinner');
+        button.disabled = true;
+        spinner.style.display = 'inline-block';
+
+        const payload = {
+            disk_id: currentDiskId,
+            title: document.getElementById('diskTitle').value,
+            center: diskCenter,
+            melody_dots: melodyDots,
+            outer_dots: outerDots,
+            start_angle: startAngle,
+            disk_radius_cm: parseFloat(document.getElementById('diskRadius').value || 19.0),
+            tempo_bpm: parseFloat(document.getElementById('tempoBpm').value || 5.3),
+            note_duration: parseFloat(document.getElementById('noteDuration').value || 0.5),
+            instrument_program: parseInt(document.getElementById('instrument').value || 11),
+            reverse_direction: document.getElementById('reverseDir').checked
+        };
+
+        try {
+            const response = await fetch('/api/save-edits', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            if (data.error) {
+                alert('Save Error: ' + data.error);
+                return;
+            }
+            document.getElementById('activeDiskTitle').innerText = `ID: ${data.id} - ${data.title}`;
+            updateHistoryRow(data);
+            alert('Changes saved to database. Audio files were not regenerated.');
+        } catch (error) {
+            alert('Failed to save changes: ' + error.message);
+        } finally {
+            button.disabled = false;
+            spinner.style.display = 'none';
+        }
+    }
+
+    function updateHistoryRow(disk) {
+        const row = document.getElementById(`row-${disk.id}`);
+        if (!row) return;
+
+        const cells = row.querySelectorAll('td');
+        if (cells.length < 5) return;
+
+        cells[0].innerHTML = `<strong>${escapeHtml(disk.title)}</strong><br><small style="color: var(--text-muted)">${escapeHtml(disk.original_filename || '')}</small>`;
+
+        const modifiedAt = disk.updated_at || disk.created_at || '';
+        const modifiedDate = modifiedAt.slice(0, 10);
+        const modifiedTime = modifiedAt.length >= 16 ? modifiedAt.slice(11, 16) : '';
+        cells[4].innerHTML = `<span style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;">${modifiedDate}<br><small style="color: var(--text-muted)">${modifiedTime}</small></span>`;
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
+    }
+
+    async function deleteDisk(id) {
+        if (!confirm('Delete this track record?')) return;
+        try {
+            const resp = await fetch(`/api/disk/${id}`, { method: 'DELETE' });
+            const data = await resp.json();
+            if (data.success) {
+                const row = document.getElementById(`row-${id}`);
+                if (row) row.remove();
+            }
+        } catch (e) {
+            alert('Delete failed: ' + e.message);
+        }
+    }
+
+    // Initialize blank canvas
+    resizeCanvas();
+</script>
+
+</body>
+</html>
