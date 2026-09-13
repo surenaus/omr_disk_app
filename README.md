@@ -4,6 +4,10 @@ An Optical Music Recognition (OMR) and audio synthesis application for digitizin
 
 The application detects punched holes, estimates the disk geometry, converts holes into musical tracks, and generates MIDI and WAV output. It also provides a Human-in-the-Loop editor so a user can correct the center, disk edge, start position, and detected holes before regenerating the melody.
 
+## Application Preview
+
+![Antique Punched Disk OMR application dashboard](127.0.0.1.jpg)
+
 ---
 
 ## 🚀 Key Features
